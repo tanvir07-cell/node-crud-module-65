@@ -3,6 +3,7 @@ const { MongoClient, ServerApiVersion } = require("mongodb");
 const cors = require("cors");
 const app = express();
 app.use(cors());
+app.use(express.json());
 
 const port = process.env.PORT || 5000;
 
@@ -25,9 +26,22 @@ async function run() {
   try {
     await client.connect();
     const userCollection = client.db("foodExpress").collection("user");
-    const user = { name: "Tanvir Rifat", email: "tanvir@gmail.com" };
-    const result = await userCollection.insertOne(user);
-    console.log(`A user was inserted with the _id: ${result.insertedId}`);
+
+    // Post api data to the mongoDb:
+    app.post("/user", async (req, res) => {
+      const user = req.body;
+      const result = await userCollection.insertOne(user);
+      res.send(result);
+      console.log(`A document was inserted with the _id: ${result.insertedId}`);
+    });
+
+    // get api data from the mongoDb to the server side:
+    app.get("/user", async (req, res) => {
+      const query = {};
+      const cursor = userCollection.find(query);
+      const user = await cursor.toArray();
+      res.send(user);
+    });
   } finally {
   }
 }
