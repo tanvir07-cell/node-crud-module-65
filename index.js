@@ -2,6 +2,7 @@ const express = require("express");
 const { MongoClient, ServerApiVersion } = require("mongodb");
 const cors = require("cors");
 const app = express();
+const ObjectId = require("mongodb").ObjectId;
 app.use(cors());
 app.use(express.json());
 
@@ -39,8 +40,46 @@ async function run() {
     app.get("/user", async (req, res) => {
       const query = {};
       const cursor = userCollection.find(query);
+
+      // post kora data gula object er moddeh theke jate ekti array er moddeh thake:
       const user = await cursor.toArray();
       res.send(user);
+    });
+
+    // get a individual update  user:
+    app.get("/user/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await userCollection.findOne(query);
+      res.send(result);
+    });
+
+    // update a user:
+    app.put("/user/:id", async (req, res) => {
+      const id = req.params.id;
+      const updatedUser = req.body;
+      const filter = { _id: ObjectId(id) };
+      const options = { upsert: true };
+
+      const updatedDoc = {
+        $set: { name: updatedUser.name, email: updatedUser.email },
+      };
+
+      const result = await userCollection.updateOne(
+        filter,
+        updatedDoc,
+        options
+      );
+
+      res.send(result);
+    });
+
+    // delete a user from the mongoDb :
+    app.delete("/user/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await userCollection.deleteOne(query);
+      res.send(result);
     });
   } finally {
   }
